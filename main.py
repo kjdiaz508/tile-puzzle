@@ -1,17 +1,21 @@
+import os.path
+
 import pygame as pg
 
 
 class Game:
     def __init__(self):
         pg.init()
-        self.WIDTH, self.HEIGHT = 800, 600
+        self.WIDTH, self.HEIGHT = 600, 800
         self.BACKGROUND_COLOR = (255, 77, 77)
         self.canvas = pg.Surface((self.WIDTH, self.HEIGHT))
         self.screen = pg.display.set_mode((self.WIDTH, self.HEIGHT))
-        self.font = pg.font.Font(None, 20)
+        self.FONT_COLOR = (34, 34, 34)
         self.clock = pg.time.Clock()
         self.running, self.playing = True, True
         self.state_stack: list[State] = [Title(self)]
+
+        self.font = pg.font.Font(os.path.join("press-start-2p-font", "PressStart2P-vaV7.ttf"), 30)
 
     def game_loop(self):
         while self.running:
@@ -35,7 +39,10 @@ class Game:
         pg.display.flip()
 
     def draw_text(self, surface: pg.Surface, text: str, position: tuple[int, int]):
-        pass
+        text_surface = self.font.render(text, True, self.FONT_COLOR)
+        text_rect = text_surface.get_rect()
+        text_rect.center = position
+        surface.blit(text_surface, text_rect)
 
 
 class State:
@@ -48,7 +55,7 @@ class State:
     def events(self, event: pg.event.Event):
         pass
 
-    def render(self, display: pg.Surface):
+    def render(self, surface: pg.Surface):
         pass
 
     def enter_state(self):
@@ -71,8 +78,13 @@ class Title(State):
     def update(self):
         pass
 
-    def render(self, display):
-        display.fill(self.game.BACKGROUND_COLOR)
+    def render(self, surface):
+        surface.fill(self.game.BACKGROUND_COLOR)
+        self.game.draw_text(
+            surface,
+            "Slide Puzzle",
+            (self.game.WIDTH // 2, int(self.game.HEIGHT * 0.10))
+        )
 
 
 class GamePlay(State):
@@ -87,8 +99,8 @@ class GamePlay(State):
     def update(self):
         pass
 
-    def render(self, display):
-        display.fill((77, 77, 77))
+    def render(self, surface):
+        surface.fill((77, 77, 77))
 
 
 if __name__ == "__main__":
