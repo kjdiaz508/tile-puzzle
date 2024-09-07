@@ -1,108 +1,64 @@
-import os.path
-
+import sys
 import pygame as pg
+import config
+from title import Title
+from gameplay import GamePlay
 
 
 class Game:
     def __init__(self):
         pg.init()
-        self.WIDTH, self.HEIGHT = 600, 800
-        self.BACKGROUND_COLOR = (255, 77, 77)
-        self.canvas = pg.Surface((self.WIDTH, self.HEIGHT))
-        self.screen = pg.display.set_mode((self.WIDTH, self.HEIGHT))
-        self.FONT_COLOR = (34, 34, 34)
+        self.screen = pg.display.get_surface()
+        self.canvas = pg.Surface((self.screen.get_width(), self.screen.get_height()))
+        self.font_color = config.FONT_COLOR
         self.clock = pg.time.Clock()
+        self.fps = 60
         self.running, self.playing = True, True
-        self.state_stack: list[State] = [Title(self)]
-
-        self.font = pg.font.Font(os.path.join("press-start-2p-font", "PressStart2P-vaV7.ttf"), 30)
+        self.state_dict = {
+            "Title": Title(),
+            "GamePlay": GamePlay()
+        }
+        self.state = self.state_dict["Title"]
+        self.state_name = "Title"
 
     def game_loop(self):
         while self.running:
             self.get_events()
             self.update()
             self.render()
-            self.clock.tick(60)
+            self.clock.tick(self.fps)
 
     def get_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
-            self.state_stack[-1].events(event)
+            self.state.events(event)
 
     def update(self):
-        self.state_stack[-1].update()
+        if self.state.quit:
+            self.running = False
+        elif self.state.done:
+            self.change_state()
+        # if we changed state the change will happen on this same frame
+        self.state.update()
+
+    def change_state(self):
+        # switching the state
+        old_state = self.state_name
+        self.state_name = self.state.next_state
+        self.state = self.state_dict[self.state_name]
+        # setting up the new state
+        self.state.previous_state = old_state
+        self.state.start_up()
 
     def render(self):
-        self.state_stack[-1].render(self.canvas)
+        self.state.render(self.canvas)
         self.screen.blit(self.canvas, (0, 0))
         pg.display.flip()
-
-    def draw_text(self, surface: pg.Surface, text: str, position: tuple[int, int]):
-        text_surface = self.font.render(text, True, self.FONT_COLOR)
-        text_rect = text_surface.get_rect()
-        text_rect.center = position
-        surface.blit(text_surface, text_rect)
-
-
-class State:
-    def __init__(self, game: Game):
-        self.game = game
-
-    def update(self):
-        pass
-
-    def events(self, event: pg.event.Event):
-        pass
-
-    def render(self, surface: pg.Surface):
-        pass
-
-    def enter_state(self):
-        self.game.state_stack.append(self)
-
-    def exit_state(self):
-        self.game.state_stack.pop()
-
-
-class Title(State):
-    def __init__(self, game):
-        super().__init__(game)
-
-    def events(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RETURN:
-                new_state = GamePlay(self.game)
-                new_state.enter_state()
-
-    def update(self):
-        pass
-
-    def render(self, surface):
-        surface.fill(self.game.BACKGROUND_COLOR)
-        self.game.draw_text(
-            surface,
-            "Slide Puzzle",
-            (self.game.WIDTH // 2, int(self.game.HEIGHT * 0.10))
-        )
-
-
-class GamePlay(State):
-    def __init__(self, game):
-        super().__init__(game)
-
-    def events(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RETURN:
-                self.exit_state()
-
-    def update(self):
-        pass
-
-    def render(self, surface):
-        surface.fill((77, 77, 77))
 
 
 if __name__ == "__main__":
     g = Game()
     g.game_loop()
+    pg.quit()
+    sys.exit()
