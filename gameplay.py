@@ -22,16 +22,13 @@ class GamePlay(State):
 
 
 class Tile:
-    def __init__(self, tile_id, grid_x, grid_y, size):
+    def __init__(self, tile_id, size):
         self.tile_id = tile_id
-        self.grid_x = grid_x
-        self.grid_y = grid_y
         self.size = size
         self.surface = pg.Surface(size)
         self.rect = self.surface.get_rect()
         self.font = pg.font.Font(config.FONT_PATH, 20)
         self.label = self.font.render(str(self.tile_id), False, config.FONT_COLOR)
-
         self.create_surface()
 
     def update(self):
@@ -51,6 +48,8 @@ class Grid:
         self.rect = self.surface.get_rect(bottom=(config.SCREEN_RECT.bottom - 100))
         self.size = size
         self.gap = 4
+
+        # TODO: rework the logic here to use the rects of the tiles instead of subsurfaces
         self.tiles = []
         self.surfaces = []
         self.generate_tiles()
@@ -61,9 +60,8 @@ class Grid:
             for j in range(0, self.size):
                 tile_id = (j * self.size + i) + 1
                 coords = (self.gap + (i*(tile_width+self.gap)), self.gap + (j*(tile_width+self.gap)))
-                self.tiles.append(Tile(tile_id, i, j, (tile_width, tile_width)))
+                self.tiles.append(Tile(tile_id, (tile_width, tile_width)))
                 self.surfaces.append(self.surface.subsurface(pg.rect.Rect(coords, (tile_width, tile_width))))
-
         self.tiles.pop()
 
     def draw_tiles(self):
