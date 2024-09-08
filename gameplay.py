@@ -64,11 +64,11 @@ class Grid:
                 self.tiles.append(Tile(tile_id, i, j, (tile_width, tile_width)))
                 self.surfaces.append(self.surface.subsurface(pg.rect.Rect(coords, (tile_width, tile_width))))
 
+        self.tiles.pop()
+
     def draw_tiles(self):
-        for i in range(0, self.size):
-            for j in range(0, self.size):
-                idx = j * self.size + i
-                self.tiles[idx].draw(self.surfaces[idx])
+        for i, tile in enumerate(self.tiles):
+            tile.draw(self.surfaces[i])
 
     def draw(self, surface):
         self.draw_tiles()
