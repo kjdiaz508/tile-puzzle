@@ -6,12 +6,16 @@ import config
 class GamePlay(State):
     def __init__(self):
         super().__init__()
-        self.grid = Grid(4)
+        self.grid = Grid(2)
 
     def events(self, event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_RETURN:
                 pass
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            clicked = self.grid.get_clicked(pg.mouse.get_pos())
+            if clicked is not None:
+                self.grid.slide(clicked)
 
     def update(self):
         pass
@@ -34,9 +38,6 @@ class Tile:
 
         self.create_surface()
 
-    def update(self):
-        pass
-
     def create_surface(self):
         surface = pg.surface.Surface((self.rect.width, self.rect.height))
         surface.fill(config.TILE_COLOR)
@@ -49,6 +50,9 @@ class Tile:
     def swap(self, other):
         self.pos, other.pos = other.pos, self.pos
         self.rect, other.rect = other.rect, self.rect
+
+    def is_clicked(self, point):
+        return self.rect.collidepoint(point)
 
 
 class Grid:
@@ -85,11 +89,23 @@ class Grid:
         e_x, e_y = self.empty_tile.pos
         self.tiles[p_y][p_x], self.tiles[e_y][e_x] = self.tiles[e_y][e_x], self.tiles[p_y][p_x]
         self.empty_tile.swap(p)
+        print(self.empty_tile.rect, p.rect)
+
+    def get_clicked(self, point):
+        offset = self.rect.top
+        print(offset)
+        for row in self.tiles:
+            for tile in row:
+                if tile.is_clicked((point[0], point[1]-offset)):
+                    return tile
+        return None
 
     def can_move(self, p):
         # cannot move diagonally to the empty tile
         x, y = p.pos
-        e_x, e_y = self.empty_tile
+        print(p.pos)
+        e_x, e_y = self.empty_tile.pos
+        print(self.empty_tile.pos)
         if x == e_x:
             if y - 1 == e_y or y + 1 == e_y:
                 return True
@@ -98,7 +114,7 @@ class Grid:
                 return True
         return False
 
-    def get_valid_moves(self):
+    def valid_moves(self):
         x, y = self.empty_tile.pos
         adj = []
         if y - 1 >= 0:
@@ -112,5 +128,6 @@ class Grid:
         return adj
 
     def draw(self, surface):
+        self.surface.fill((0, 0, 0))
         self.draw_tiles()
         surface.blit(self.surface, self.rect)
