@@ -39,7 +39,6 @@ class Game:
             self.running = False
         elif self.state.done:
             self.change_state()
-        # if we changed state the change will happen on this same frame
         self.state.update()
 
     def change_state(self):
