@@ -8,7 +8,7 @@ class GamePlay(State):
         super().__init__()
         self.grid = Grid(2)
 
-    def events(self, event):
+    def events(self, event: pg.event.Event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_RETURN:
                 pass
@@ -18,15 +18,15 @@ class GamePlay(State):
                 self.grid.slide(clicked)
 
     def update(self):
-        pass
+        self.grid.update()
 
-    def render(self, surface):
+    def render(self, surface: pg.surface.Surface):
         surface.fill((77, 77, 77))
         self.grid.draw(surface)
 
 
 class Tile:
-    def __init__(self, tile_id, pos, rect):
+    def __init__(self, tile_id: int, pos: tuple[int, int], rect:pg.rect.Rect):
         # initialized in helper
         self.surface = None
 
@@ -44,10 +44,10 @@ class Tile:
         surface.blit(self.label, self.label.get_rect().move(10, 10))
         self.surface = surface
 
-    def draw(self, surface):
+    def draw(self, surface: pg.surface.Surface):
         surface.blit(self.surface, self.rect)
 
-    def swap(self, other):
+    def swap(self, other: 'Tile'):
         self.pos, other.pos = other.pos, self.pos
         self.rect, other.rect = other.rect, self.rect
 
@@ -65,6 +65,7 @@ class Grid:
         self.squares = []
         self.empty_tile = None
         self.generate_tiles()
+        self.solved = True
 
     def generate_tiles(self):
         tile_width = (self.rect.width - (self.gap * self.size) - self.gap) // self.size
@@ -82,30 +83,29 @@ class Grid:
                 if tile is not self.empty_tile:
                     tile.draw(self.surface)
 
-    def slide(self, p):
+    def slide(self, p: Tile):
         if not self.can_move(p):
             return
         p_x, p_y = p.pos
         e_x, e_y = self.empty_tile.pos
         self.tiles[p_y][p_x], self.tiles[e_y][e_x] = self.tiles[e_y][e_x], self.tiles[p_y][p_x]
         self.empty_tile.swap(p)
-        print(self.empty_tile.rect, p.rect)
 
-    def get_clicked(self, point):
+    def get_clicked(self, point: tuple[int, int]):
         offset = self.rect.top
-        print(offset)
         for row in self.tiles:
             for tile in row:
                 if tile.is_clicked((point[0], point[1]-offset)):
                     return tile
         return None
 
-    def can_move(self, p):
+    def update(self):
+        self.solved = self.check_solved()
+
+    def can_move(self, p: Tile):
         # cannot move diagonally to the empty tile
         x, y = p.pos
-        print(p.pos)
         e_x, e_y = self.empty_tile.pos
-        print(self.empty_tile.pos)
         if x == e_x:
             if y - 1 == e_y or y + 1 == e_y:
                 return True
@@ -113,6 +113,15 @@ class Grid:
             if x - 1 == e_x or x + 1 == e_x:
                 return True
         return False
+
+    def check_solved(self):
+        tile_num = 0
+        for y in range(self.size):
+            for x in range(self.size):
+                tile_num += 1
+                if self.tiles[y][x].tile_id != tile_num:
+                    return False
+        return True
 
     def valid_moves(self):
         x, y = self.empty_tile.pos
@@ -127,7 +136,10 @@ class Grid:
             adj.append((x + 1, y))
         return adj
 
-    def draw(self, surface):
-        self.surface.fill((0, 0, 0))
+    def draw(self, surface: pg.surface.Surface):
+        if self.solved:
+            self.surface.fill((0, 255, 0))
+        else:
+            self.surface.fill((244, 11, 55))
         self.draw_tiles()
         surface.blit(self.surface, self.rect)

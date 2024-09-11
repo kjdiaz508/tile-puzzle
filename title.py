@@ -9,7 +9,6 @@ class Title(State):
         self.BACKGROUND_COLOR = (255, 77, 77)
         self.TEXT_COLOR = (51, 51, 51)
         self.next_state = "GamePlay"
-        self.done = False
 
         self.play_button = Button(
             self.switch_state,
@@ -21,17 +20,14 @@ class Title(State):
             self.TEXT_COLOR,
         )
 
-    def events(self, event):
+    def events(self, event: pg.event.Event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_RETURN:
                 pass
         elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             self.play_button.on_click(event)
 
-    def update(self):
-        pass
-
-    def render(self, surface):
+    def render(self, surface: pg.surface.Surface):
         display_rect = surface.get_rect()
         surface.fill(self.BACKGROUND_COLOR)
         self.draw_text(
@@ -54,9 +50,9 @@ class Button:
         self.bg_color = bg_color
         self.text_color = text_color
 
-        self.generate_surface(center, padding)
+        self._generate_surface(center, padding)
 
-    def generate_surface(self, center, padding):
+    def _generate_surface(self, center, padding):
         text_surface = self.font.render(self.text, False, self.text_color)
         full_surface = pg.Surface(
             (text_surface.get_width() + 2 * padding[0], text_surface.get_height() + 2 * padding[1])
