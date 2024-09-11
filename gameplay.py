@@ -1,3 +1,6 @@
+import random
+from typing import Optional
+
 from state import State
 import pygame as pg
 import config
@@ -6,7 +9,7 @@ import config
 class GamePlay(State):
     def __init__(self):
         super().__init__()
-        self.grid = Grid(2)
+        self.grid = Grid(4)
 
     def events(self, event: pg.event.Event):
         if event.type == pg.KEYDOWN:
@@ -51,7 +54,7 @@ class Tile:
         self.pos, other.pos = other.pos, self.pos
         self.rect, other.rect = other.rect, self.rect
 
-    def is_clicked(self, point):
+    def is_clicked(self, point) -> bool:
         return self.rect.collidepoint(point)
 
 
@@ -61,11 +64,15 @@ class Grid:
         self.rect = self.surface.get_rect(bottom=(config.SCREEN_RECT.bottom - 100))
         self.size = size
         self.gap = 4
+
         self.tiles = []
         self.squares = []
         self.empty_tile = None
+        self.last_switch: Optional[tuple[int, int]] = None
         self.generate_tiles()
+
         self.solved = True
+        self.scramble()
 
     def generate_tiles(self):
         tile_width = (self.rect.width - (self.gap * self.size) - self.gap) // self.size
@@ -76,6 +83,7 @@ class Grid:
                 coords = (self.gap + (x*(tile_width+self.gap)), self.gap + (y*(tile_width+self.gap)))
                 self.tiles[y].append(Tile(tile_id, (x, y), pg.rect.Rect(coords, (tile_width, tile_width))))
         self.empty_tile = self.tiles[-1][-1]
+        self.last_switch = self.empty_tile.pos
 
     def draw_tiles(self):
         for row in self.tiles:
@@ -86,12 +94,13 @@ class Grid:
     def slide(self, p: Tile):
         if not self.can_move(p):
             return
+        self.last_switch = self.empty_tile.pos
         p_x, p_y = p.pos
         e_x, e_y = self.empty_tile.pos
         self.tiles[p_y][p_x], self.tiles[e_y][e_x] = self.tiles[e_y][e_x], self.tiles[p_y][p_x]
         self.empty_tile.swap(p)
 
-    def get_clicked(self, point: tuple[int, int]):
+    def get_clicked(self, point: tuple[int, int]) -> Optional[Tile]:
         offset = self.rect.top
         for row in self.tiles:
             for tile in row:
@@ -123,7 +132,7 @@ class Grid:
                     return False
         return True
 
-    def valid_moves(self):
+    def valid_moves(self) -> list[tuple[int, int]]:
         x, y = self.empty_tile.pos
         adj = []
         if y - 1 >= 0:
@@ -135,6 +144,15 @@ class Grid:
         if x + 1 < self.size:
             adj.append((x + 1, y))
         return adj
+
+    def scramble(self, steps: int = 50):
+        # must use valid moves to scramble the board to guarentee solve-ability
+        for i in range(steps):
+            choices = self.valid_moves()
+            if self.last_switch in choices:
+                choices.remove(self.last_switch)
+            x, y = random.choice(choices)
+            self.slide(self.tiles[y][x])
 
     def draw(self, surface: pg.surface.Surface):
         if self.solved:
