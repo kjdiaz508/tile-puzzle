@@ -1,5 +1,6 @@
 from state import State
 import pygame as pg
+from tkinter import filedialog
 import config
 
 
@@ -9,13 +10,22 @@ class Title(State):
         self.BACKGROUND_COLOR = (255, 77, 77)
         self.TEXT_COLOR = (51, 51, 51)
         self.next_state = "GamePlay"
-
+        self.image_choice = None
         self.play_button = Button(
             self.switch_state,
             "Play Game",
             self.font,
             (config.SCREEN_RECT.centerx, config.SCREEN_RECT.centery),
-            (10, 5),
+            (35, 10),
+            config.TILE_COLOR,
+            self.TEXT_COLOR,
+        )
+        self.pick_img_button = Button(
+            self.pick_img,
+            "Pick Image",
+            self.font,
+            (config.SCREEN_RECT.centerx, config.SCREEN_RECT.centery - 80),
+            (20, 10),
             config.TILE_COLOR,
             self.TEXT_COLOR,
         )
@@ -26,6 +36,7 @@ class Title(State):
                 pass
         elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             self.play_button.on_click(event)
+            self.pick_img_button.on_click(event)
 
     def render(self, surface: pg.surface.Surface):
         display_rect = surface.get_rect()
@@ -37,6 +48,12 @@ class Title(State):
             self.TEXT_COLOR
         )
         self.play_button.draw(surface)
+        self.pick_img_button.draw(surface)
+
+    def pick_img(self):
+        self.persistent["image_path"] = filedialog.askopenfilename(
+            title='select an image',
+            filetypes=config.VALID_FILETYPES)
 
 
 class Button:

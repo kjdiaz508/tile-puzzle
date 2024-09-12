@@ -10,7 +10,7 @@ class State:
         self.quit = False
         self.next_state: str | None = None
         self.previous_state: str | None = None
-
+        self.persistent = None
         self.font = pg.font.Font(os.path.join("press-start-2p-font", "PressStart2P-vaV7.ttf"), 30)
 
     def update(self):
@@ -25,8 +25,9 @@ class State:
     def switch_state(self):
         self.done = True
 
-    def start_up(self):
+    def start_up(self, persistent):
         # in case a state is being re-entered
+        self.persistent = persistent
         self.done = False
 
     def draw_text(self, text: str, surface: pg.Surface, center: tuple[int, int], color):

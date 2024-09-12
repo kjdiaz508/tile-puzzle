@@ -7,6 +7,11 @@ TILE_COLOR = (240, 240, 240)
 PRIMARY_COLOR = (74, 74, 74)
 ACCENT_COLOR = (255, 102, 102)
 FONT_COLOR = (51, 51, 51)
+VALID_FILETYPES = (
+    ('Images', '*.png'),
+    ('Images', '*.jpg'),
+    ('Images', '*.jpeg')
+)
 
 # initialization
 pg.init()

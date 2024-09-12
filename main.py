@@ -1,4 +1,5 @@
 import sys
+import tkinter as tk
 import pygame as pg
 import config
 from title import Title
@@ -14,12 +15,17 @@ class Game:
         self.clock = pg.time.Clock()
         self.fps = 60
         self.running, self.playing = True, True
+
         self.state_dict = {
             "Title": Title(),
             "GamePlay": GamePlay()
         }
-        self.state = self.state_dict["Title"]
         self.state_name = "Title"
+        self.state = self.state_dict[self.state_name]
+        self.persistent = {
+            "image_path": None,
+        }
+        self.state.start_up(self.persistent)
 
     def game_loop(self):
         while self.running:
@@ -48,7 +54,7 @@ class Game:
         self.state = self.state_dict[self.state_name]
         # setting up the new state
         self.state.previous_state = old_state
-        self.state.start_up()
+        self.state.start_up(self.persistent)
 
     def render(self):
         self.state.render(self.canvas)
@@ -57,6 +63,8 @@ class Game:
 
 
 if __name__ == "__main__":
+    root = tk.Tk()
+    root.withdraw()
     g = Game()
     g.game_loop()
     pg.quit()

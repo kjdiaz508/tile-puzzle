@@ -9,7 +9,8 @@ import config
 class GamePlay(State):
     def __init__(self):
         super().__init__()
-        self.grid = Grid(4)
+        self.img = None
+        self.grid = None
 
     def events(self, event: pg.event.Event):
         if event.type == pg.KEYDOWN:
@@ -23,16 +24,22 @@ class GamePlay(State):
     def update(self):
         self.grid.update()
 
+    def start_up(self, persistent):
+        super().start_up(persistent)
+        if self.persistent["image_path"]:
+            self.img = pg.image.load(self.persistent["image_path"])
+        self.grid = Grid(self.img, 4)
+
     def render(self, surface: pg.surface.Surface):
         surface.fill((77, 77, 77))
         self.grid.draw(surface)
 
 
 class Tile:
-    def __init__(self, tile_id: int, pos: tuple[int, int], rect:pg.rect.Rect):
+    def __init__(self, tile_id: int, image: Optional[pg.Surface], pos: tuple[int, int], rect: pg.rect.Rect):
         # initialized in helper
-        self.surface = None
-
+        self.surface = image
+        self.image = image
         self.pos = pos
         self.rect = rect
         self.tile_id = tile_id
@@ -42,10 +49,10 @@ class Tile:
         self.create_surface()
 
     def create_surface(self):
-        surface = pg.surface.Surface((self.rect.width, self.rect.height))
-        surface.fill(config.TILE_COLOR)
-        surface.blit(self.label, self.label.get_rect().move(10, 10))
-        self.surface = surface
+        if not self.surface:
+            self.surface = pg.surface.Surface((self.rect.width, self.rect.height))
+            self.surface.fill(config.TILE_COLOR)
+        self.surface.blit(self.label, self.label.get_rect().move(10, 10))
 
     def draw(self, surface: pg.surface.Surface):
         surface.blit(self.surface, self.rect)
@@ -59,7 +66,7 @@ class Tile:
 
 
 class Grid:
-    def __init__(self, size: int):
+    def __init__(self, image: Optional[pg.Surface], size: int):
         self.surface = pg.Surface((config.SCREEN_RECT.width, config.SCREEN_RECT.width))
         self.rect = self.surface.get_rect(bottom=(config.SCREEN_RECT.bottom - 100))
         self.size = size
@@ -69,6 +76,7 @@ class Grid:
         self.squares = []
         self.empty_tile = None
         self.last_switch: Optional[tuple[int, int]] = None
+        self.image = image
         self.generate_tiles()
 
         self.solved = True
@@ -76,12 +84,16 @@ class Grid:
 
     def generate_tiles(self):
         tile_width = (self.rect.width - (self.gap * self.size) - self.gap) // self.size
+        if self.image:
+            self.image = pg.transform.scale(self.image, (self.rect.width, self.rect.height))
         for y in range(0, self.size):
             self.tiles.append([])
             for x in range(0, self.size):
                 tile_id = (y * self.size + x) + 1
                 coords = (self.gap + (x*(tile_width+self.gap)), self.gap + (y*(tile_width+self.gap)))
-                self.tiles[y].append(Tile(tile_id, (x, y), pg.rect.Rect(coords, (tile_width, tile_width))))
+                rect = pg.rect.Rect(coords, (tile_width, tile_width))
+                img = self.image.subsurface(rect) if self.image else None
+                self.tiles[y].append(Tile(tile_id, img, (x, y), rect))
         self.empty_tile = self.tiles[-1][-1]
         self.last_switch = self.empty_tile.pos
 
