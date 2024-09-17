@@ -2,6 +2,7 @@ import random
 from typing import Optional
 
 from state import State
+from title import Button
 import pygame as pg
 import config
 
@@ -10,13 +11,25 @@ class GamePlay(State):
     def __init__(self):
         super().__init__()
         self.img = None
+        self.img_path = None
         self.grid = None
+        self.next_state = 'Title'
+        self.return_button = Button(
+            self.switch_state,
+            "Main Menu",
+            self.font,
+            (config.SCREEN_RECT.width // 2, 50),
+            (20, 10),
+            config.TILE_COLOR,
+            config.FONT_COLOR
+        )
 
     def events(self, event: pg.event.Event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_RETURN:
                 pass
         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            self.return_button.on_click(event)
             clicked = self.grid.get_clicked(pg.mouse.get_pos())
             if clicked is not None:
                 self.grid.slide(clicked)
@@ -26,13 +39,16 @@ class GamePlay(State):
 
     def start_up(self, persistent):
         super().start_up(persistent)
-        if self.persistent["image_path"]:
-            self.img = pg.image.load(self.persistent["image_path"])
-        self.grid = Grid(self.img, 4)
+        if self.grid is None or self.img_path != self.persistent["image_path"]:
+            if self.persistent["image_path"]:
+                self.img = pg.image.load(self.persistent["image_path"])
+                self.img_path = self.persistent["image_path"]
+            self.grid = Grid(self.img, 4)
 
     def render(self, surface: pg.surface.Surface):
         surface.fill((77, 77, 77))
         self.grid.draw(surface)
+        self.return_button.draw(surface)
 
 
 class Tile:
