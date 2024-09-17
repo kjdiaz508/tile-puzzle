@@ -63,8 +63,6 @@ class Game:
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw()
     g = Game()
     g.game_loop()
     pg.quit()
